@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="campos">
+        <div class="cpf">
+            <label for="cpf">CPF:</label>
+            <input type="text" name="cpf" id="cpf" maxlength="11">
+            <div class="invalido_Cpf">CPF inválido, favor corrigir!</div>
+        </div>
+
+
+        <div class="cnpj">
+            <label for="cnpj">CNPJ:</label>
+            <input type="text" name="cnpj" id="cnpj">
+            <div class="invalido_Cnpj">CNPJ inválido, favor corrigir!</div>
+        </div>
+    </div>
+
+
+
+    <script>
+        var cpfInput = document.getElementById('cpf');
+        var cnpjInput = document.getElementById('cnpj');
+        
+        var cpfErro = document.getElementsByClassName('invalido_Cpf')[0];
+        var cnpjErro = document.getElementsByClassName('invalido_Cnpj')[0];
+
+
+        cpfInput.addEventListener('change', function () {
+            validaCPF(cpfInput.value);
+        });
+
+
+        function validaCPF(valor) {
+            if (valor.lenght != 11) {
+                cpfErro.style.display = "block";
+            }
+        }
+
+
+
+    </script>
+</body>
+
+</html>
