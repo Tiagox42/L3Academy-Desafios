@@ -13,7 +13,7 @@
     <div class="campos">
         <div class="cpf">
             <label for="cpf">CPF:</label>
-            <input type="text" name="cpf" id="cpf" maxlength="11">
+            <input type="text" name="cpf" id="cpf" maxlength="14">
             <div class="invalido_Cpf">CPF inválido, favor corrigir!</div>
         </div>
 
@@ -30,22 +30,68 @@
     <script>
         var cpfInput = document.getElementById('cpf');
         var cnpjInput = document.getElementById('cnpj');
-        
+
         var cpfErro = document.getElementsByClassName('invalido_Cpf')[0];
         var cnpjErro = document.getElementsByClassName('invalido_Cnpj')[0];
 
 
-        cpfInput.addEventListener('change', function () {
-            validaCPF(cpfInput.value);
+        cpfInput.addEventListener('input', function () {
+            mascaraCPF(cpfInput);
         });
 
+        cpfInput.addEventListener('change', function () {
+            validaCPF(cpfInput);
+        });
 
-        function validaCPF(valor) {
-            if (valor.lenght != 11) {
-                cpfErro.style.display = "block";;
-            }
+        function mascaraCPF(campo) {
+            let valor = campo.value.replace(/\D/g, '');
+            valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
+            valor = valor.replace(/(\d{3})(\d)/, '$1.$2');
+            valor = valor.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            campo.value = valor;
         }
 
+
+        function validaCPF(campo) {
+            let valorCpf = campo.value.replace(/\D/g, '');
+
+            if (valorCpf.length != 11 || /^(\d)\1{10}$/.test(valorCpf)) {
+                cpfErro.style.display = "block";
+                return;
+            }
+
+            let arrayCpf = valorCpf.split('');
+
+            let digito1;
+            let primeiraSoma = arrayCpf[0] * 10 + arrayCpf[1] * 9 + arrayCpf[2] * 8 + arrayCpf[3] * 7 + arrayCpf[4] * 6 + arrayCpf[5] * 5 + arrayCpf[6] * 4 + arrayCpf[7] * 3 + arrayCpf[8] * 2;
+            let resto = primeiraSoma % 11;
+
+            if (resto < 2) {
+                digito1 = 0;
+            } else if (resto >= 2) {
+                digito1 = 11 - resto;
+            }
+            if (valorCpf.charAt(9) != digito1) {
+                cpfErro.style.display = "block";
+                return;
+            }
+
+            let digito2;
+            let segundaSoma = arrayCpf[0] * 11 + arrayCpf[1] * 10 + arrayCpf[2] * 9 + arrayCpf[3] * 8 + arrayCpf[4] * 7 + arrayCpf[5] * 6 + arrayCpf[6] * 5 + arrayCpf[7] * 4 + arrayCpf[8] * 3 + arrayCpf[9] * 2;
+            let resto2 = segundaSoma % 11;
+
+            if (resto2 < 2) {
+                digito2 = 0;
+            } else if (resto2 >= 2) {
+                digito2 = 11 - resto2;
+            }
+            if (valorCpf.charAt(10) != digito2) {
+                cpfErro.style.display = "block";
+                return;
+            }
+
+            cpfErro.style.display = "none";
+        }
 
 
     </script>
