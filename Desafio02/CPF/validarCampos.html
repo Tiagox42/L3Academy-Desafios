@@ -55,37 +55,26 @@
         function validaCPF(campo) {
             let valorCpf = campo.value.replace(/\D/g, '');
 
-            if (valorCpf.length != 11 || /^(\d)\1{10}$/.test(valorCpf)) {
+            if (valorCpf.length !== 11 || /^(\d)\1{10}$/.test(valorCpf)) {
                 cpfErro.style.display = "block";
                 return;
             }
 
-            let arrayCpf = valorCpf.split('');
+            const calcularDigito = (cpf, peso) => {
+                let soma = 0;
+                for (let i = 0; i < peso; i++) {
+                    soma += cpf[i] * (peso + 1 - i);
+                }
+                const resto = soma % 11;
+                return resto < 2 ? 0 : 11 - resto;
+            };
 
-            let digito1;
-            let primeiraSoma = arrayCpf[0] * 10 + arrayCpf[1] * 9 + arrayCpf[2] * 8 + arrayCpf[3] * 7 + arrayCpf[4] * 6 + arrayCpf[5] * 5 + arrayCpf[6] * 4 + arrayCpf[7] * 3 + arrayCpf[8] * 2;
-            let resto = primeiraSoma % 11;
+            const arrayCpf = valorCpf.split('');
 
-            if (resto < 2) {
-                digito1 = 0;
-            } else if (resto >= 2) {
-                digito1 = 11 - resto;
-            }
-            if (valorCpf.charAt(9) != digito1) {
-                cpfErro.style.display = "block";
-                return;
-            }
+            const digito1 = calcularDigito(arrayCpf, 9);
+            const digito2 = calcularDigito(arrayCpf, 10);
 
-            let digito2;
-            let segundaSoma = arrayCpf[0] * 11 + arrayCpf[1] * 10 + arrayCpf[2] * 9 + arrayCpf[3] * 8 + arrayCpf[4] * 7 + arrayCpf[5] * 6 + arrayCpf[6] * 5 + arrayCpf[7] * 4 + arrayCpf[8] * 3 + arrayCpf[9] * 2;
-            let resto2 = segundaSoma % 11;
-
-            if (resto2 < 2) {
-                digito2 = 0;
-            } else if (resto2 >= 2) {
-                digito2 = 11 - resto2;
-            }
-            if (valorCpf.charAt(10) != digito2) {
+            if (valorCpf.charAt(9) != digito1 || valorCpf.charAt(10) != digito2) {
                 cpfErro.style.display = "block";
                 return;
             }
