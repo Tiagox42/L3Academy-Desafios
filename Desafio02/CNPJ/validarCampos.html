@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validador</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="campos">
+        <div class="cnpj">
+            <label for="cnpj">CNPJ:</label>
+            <input type="text" name="cnpj" id="cnpj" maxlength="18">
+            <div class="invalido_Cnpj" id="mensagem" style="display:none; color: red;">CNPJ inválido, favor corrigir!</div>
+        </div>
+    </div>
+
+    <script>
+        function validarCNPJ(cnpj) {
+            cnpj = cnpj.replace(/[^\d]+/g, '');
+
+            if (cnpj.length !== 14 || /^(\d)\1+$/.test(cnpj)) {
+                return false;
+            }
+
+            function calcularDigito(cnpj, pesoInicial) {
+                let soma = 0;
+                let peso = pesoInicial;
+
+                for (let i = 0; i < cnpj.length; i++) {
+                    soma += cnpj[i] * peso;
+                    peso--;
+                    if (peso < 2) peso = 9;
+                }
+
+                const resto = soma % 11;
+                return resto < 2 ? 0 : 11 - resto;
+            }
+
+            const primeiroDigito = calcularDigito(cnpj.substring(0, 12), 5);
+            const segundoDigito = calcularDigito(cnpj.substring(0, 12) + primeiroDigito, 6);
+
+            return primeiroDigito == cnpj[12] && segundoDigito == cnpj[13];
+        }
+
+        document.getElementById('cnpj').addEventListener('input', function () {
+            const cnpj = this.value;
+            const mensagem = document.getElementById('mensagem');
+            if (validarCNPJ(cnpj)) {
+                mensagem.style.display = 'none';
+            } else {
+                mensagem.textContent = 'CNPJ inválido, favor corrigir!';
+                mensagem.style.display = 'block';  
+            }
+        });
+    </script>
+</body>
+</html>

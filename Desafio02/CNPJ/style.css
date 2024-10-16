@@ -1,0 +1,29 @@
+div {
+    margin: 30px;
+    text-align: center;
+}
+
+input {
+    height: 40px;
+    width: 500px;
+    font-size: 40px;
+}
+
+label {
+    font-weight: bold;
+    font-size: 35px;
+}
+
+.invalido_Cpf {
+    font-size: 25px;
+    color: red;
+    margin: 5px;
+    display: none;
+}
+
+.invalido_Cnpj {
+    font-size: 25px;
+    color: red;
+    margin: 5px;
+    display: none;
+}
