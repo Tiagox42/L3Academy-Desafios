@@ -13,14 +13,23 @@
     <div class="campos">
         <div class="cnpj">
             <label for="cnpj">CNPJ:</label>
-            <input type="text" name="cnpj" id="cnpj" maxlength="18">
+            <input type="text" name="cnpj" id="cnpj" maxlength="18" placeholder="99.999.999/9999-99">
             <div class="invalido_Cnpj" id="mensagem" style="display:none; color: red;">CNPJ inválido, favor corrigir!</div>
         </div>
     </div>
 
     <script>
+        function aplicarMascaraCNPJ(value) {
+            value = value.replace(/\D/g, ""); 
+            value = value.replace(/^(\d{2})(\d)/, "$1.$2"); 
+            value = value.replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3"); 
+            value = value.replace(/\.(\d{3})(\d)/, ".$1/$2"); 
+            value = value.replace(/(\d{4})(\d)/, "$1-$2"); 
+            return value;
+        }
+
         function validarCNPJ(cnpj) {
-            cnpj = cnpj.replace(/[^\d]+/g, '');
+            cnpj = cnpj.replace(/[^\d]+/g, ''); 
 
             if (cnpj.length !== 14 || /^(\d)\1+$/.test(cnpj)) {
                 return false;
@@ -47,13 +56,16 @@
         }
 
         document.getElementById('cnpj').addEventListener('input', function () {
+            this.value = aplicarMascaraCNPJ(this.value);
+
             const cnpj = this.value;
             const mensagem = document.getElementById('mensagem');
+
             if (validarCNPJ(cnpj)) {
                 mensagem.style.display = 'none';
             } else {
                 mensagem.textContent = 'CNPJ inválido, favor corrigir!';
-                mensagem.style.display = 'block';  
+                mensagem.style.display = 'block';
             }
         });
     </script>
