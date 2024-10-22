@@ -1,13 +1,13 @@
-﻿using System;
+﻿using Microsoft.Xrm.Sdk;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Xrm.Sdk;
 
-namespace ConsultaCep_Plugin
+namespace Plugin.ConsultaCep
 {
-    public class ConsultaCep_Main : IPlugin
+    public class ConsultaCep : IPlugin
     {
         public void Execute(IServiceProvider serviceProvider)
         {
