@@ -12,43 +12,54 @@ namespace Plugin.ConsultaCep
 {
     public class ConsultaCep : IPlugin
     {
+        private static readonly HttpClient client = new HttpClient
+        {
+            Timeout = TimeSpan.FromSeconds(3),
+        };
+
         public void Execute(IServiceProvider serviceProvider)
         {
             IPluginExecutionContext context = (IPluginExecutionContext)serviceProvider.GetService(typeof(IPluginExecutionContext));
 
             IOrganizationServiceFactory serviceFactory = (IOrganizationServiceFactory)serviceProvider.GetService(typeof(IOrganizationServiceFactory));
             IOrganizationService service = serviceFactory.CreateOrganizationService(context.UserId);
+            ITracingService tracingService = (ITracingService)serviceProvider.GetService(typeof(ITracingService));
 
             Entity entity = (Entity)context.InputParameters["Target"];
 
-            if (entity.LogicalName == "lead")
+            string cep = entity["new_cep"].ToString();
+            if (!ValidaCep(cep, out cep))
             {
-                string cep = entity["new_cep"].ToString();
-                if (!ValidaCep(cep, out cep))
-                {
-                    return;
-                }
-                else
-                {
-                    Endereco endereco = BuscarCep(cep);
-
-                    if (endereco != null)
-                    {
-
-                    }
-                    else
-                    {
-                        ITracingService tracingService = (ITracingService)serviceProvider.GetService(typeof(ITracingService));
-                        tracingService.Trace($"[Erro][Plugin - ConsultaCep] {cep} não encontrado nas apis.");
-                    }
-                }
-
-
+                return;
             }
 
-            if (entity.LogicalName == "contact")
+            Endereco endereco = BuscarCep(cep).GetAwaiter().GetResult();
+            if (endereco == null)
             {
+                tracingService.Trace($"[Erro][Plugin - ConsultaCep] {cep} não encontrado nas apis.");
+                return;
+            }
 
+            try
+            {
+                if (entity.LogicalName == "lead" || entity.LogicalName == "contact" || entity.LogicalName == "account")
+                {
+                    entity["address1_postalcode"] = endereco.Cep;
+                    entity["address1_line1"] = endereco.Rua;
+                    entity["address1_line3"] = endereco.Bairro;
+                    entity["address1_city"] = endereco.Cidade;
+                    entity["address1_stateorprovince"] = endereco.Estado;
+                    entity["address1_country"] = endereco.Regiao;
+
+                    service.Update(entity);
+                }
+            }
+            catch (Exception ex)
+            {
+                tracingService.Trace($"[Erro][Plugin - ConsultaCep] Não foi possível atualizar o registro {entity.LogicalName}," +
+                    $" ID:{entity.Id}. " +
+                    $"Detalhes: " + ex);
+                throw;
             }
 
         }
@@ -66,13 +77,13 @@ namespace Plugin.ConsultaCep
             }
         }
 
-        public Endereco BuscarCep(string cep)
+        public async Task<Endereco> BuscarCep(string cep)
         {
-            Func<string, Endereco>[] apis = { ViaCep, OpenCep, BrasilApi };
+            Func<string, Task<Endereco>>[] apis = { ViaCep, OpenCep, BrasilApi };
 
             foreach (var buscar in apis)
             {
-                Endereco endereco = buscar(cep);
+                Endereco endereco = await buscar(cep);
                 if (endereco != null)
                 {
                     return endereco;
@@ -83,95 +94,98 @@ namespace Plugin.ConsultaCep
         }
 
         //Prioridade
-        public Endereco ViaCep(string cep)
+        public async Task<Endereco> ViaCep(string cep)
         {
-            string url = $"https://viacep.com.br/ws/{cep}/json/";
-
-            HttpClient client = new HttpClient();
-
-            HttpResponseMessage response = client.GetAsync(url).Result;
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                string resultado = response.Content.ReadAsStringAsync().Result;
+                string url = $"https://viacep.com.br/ws/{cep}/json/";
 
-                Endereco_ViaCep objeto = JsonConvert.DeserializeObject<Endereco_ViaCep>(resultado);
-                Endereco endereco = new Endereco();
-                endereco.Cep = objeto.cep;
-                endereco.Rua = objeto.logradouro;
-                endereco.Bairro = objeto.bairro;
-                endereco.Cidade = objeto.localidade;
-                endereco.Estado = objeto.estado;
-                endereco.Regiao = objeto.regiao;
+                HttpResponseMessage response = await client.GetAsync(url);
 
-                return endereco;
+                if (response.IsSuccessStatusCode)
+                {
+                    string resultado = await response.Content.ReadAsStringAsync();
+
+                    Endereco_ViaCep objeto = JsonConvert.DeserializeObject<Endereco_ViaCep>(resultado);
+                    Endereco endereco = new Endereco();
+                    endereco.Cep = objeto.cep;
+                    endereco.Rua = objeto.logradouro;
+                    endereco.Bairro = objeto.bairro;
+                    endereco.Cidade = objeto.localidade;
+                    endereco.Estado = objeto.estado;
+                    endereco.Regiao = objeto.regiao;
+
+                    return endereco;
+                }
             }
-            else
+            catch (Exception)
             {
-                return null;
             }
+            return null;
         }
 
         //Consulta todos, ficar por último
-        public Endereco BrasilApi(string cep)
+        public async Task<Endereco> BrasilApi(string cep)
         {
-            string url = $"https://brasilapi.com.br/api/cep/v1/{cep}";
-
-            HttpClient client = new HttpClient();
-
-            HttpResponseMessage response = client.GetAsync(url).Result;
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                string resultado = response.Content.ReadAsStringAsync().Result;
+                string url = $"https://brasilapi.com.br/api/cep/v1/{cep}";
 
-                Endereco_BrasilApi objeto = JsonConvert.DeserializeObject<Endereco_BrasilApi>(resultado);
-                Endereco endereco = new Endereco();
-                endereco.Cep = objeto.cep;
-                endereco.Rua = objeto.street;
-                endereco.Bairro = objeto.neighborhood;
-                endereco.Cidade = objeto.city;
-                string[] partes = Regiao(objeto.state).Split(',');
-                endereco.Estado = partes[0];
-                endereco.Regiao = partes[1];
+                HttpResponseMessage response = await client.GetAsync(url);
 
-                return endereco;
+                if (response.IsSuccessStatusCode)
+                {
+                    string resultado = await response.Content.ReadAsStringAsync();
+
+                    Endereco_BrasilApi objeto = JsonConvert.DeserializeObject<Endereco_BrasilApi>(resultado);
+                    Endereco endereco = new Endereco();
+                    endereco.Cep = objeto.cep;
+                    endereco.Rua = objeto.street;
+                    endereco.Bairro = objeto.neighborhood;
+                    endereco.Cidade = objeto.city;
+                    string[] partes = Regiao(objeto.state).Split(',');
+                    endereco.Estado = partes[0];
+                    endereco.Regiao = partes[1];
+
+                    return endereco;
+                }
             }
-            else
+            catch (Exception)
             {
-                return null;
             }
+            return null;
         }
 
         //Do github
-        public Endereco OpenCep(string cep)
+        public async Task<Endereco> OpenCep(string cep)
         {
-            string url = $"https://opencep.com/v1/{cep}";
-
-            HttpClient client = new HttpClient();
-
-            HttpResponseMessage response = client.GetAsync(url).Result;
-
-            if (response.IsSuccessStatusCode)
+            try
             {
-                string resultado = response.Content.ReadAsStringAsync().Result;
+                string url = $"https://opencep.com/v1/{cep}";
 
-                Endereco_OpenCep objeto = JsonConvert.DeserializeObject<Endereco_OpenCep>(resultado);
-                Endereco endereco = new Endereco();
-                endereco.Cep = objeto.cep;
-                endereco.Rua = objeto.logradouro;
-                endereco.Bairro = objeto.bairro;
-                endereco.Cidade = objeto.localidade;
-                string[] partes = Regiao(objeto.uf).Split(',');
-                endereco.Estado = partes[0];
-                endereco.Regiao = partes[1];
+                HttpResponseMessage response = await client.GetAsync(url);
 
-                return endereco;
+                if (response.IsSuccessStatusCode)
+                {
+                    string resultado = await response.Content.ReadAsStringAsync();
+
+                    Endereco_OpenCep objeto = JsonConvert.DeserializeObject<Endereco_OpenCep>(resultado);
+                    Endereco endereco = new Endereco();
+                    endereco.Cep = objeto.cep;
+                    endereco.Rua = objeto.logradouro;
+                    endereco.Bairro = objeto.bairro;
+                    endereco.Cidade = objeto.localidade;
+                    string[] partes = Regiao(objeto.uf).Split(',');
+                    endereco.Estado = partes[0];
+                    endereco.Regiao = partes[1];
+
+                    return endereco;
+                }
             }
-            else
+            catch (Exception)
             {
-                return null;
             }
+            return null;
         }
 
         public string Regiao(string uf)
@@ -211,7 +225,8 @@ namespace Plugin.ConsultaCep
             if (estados.TryGetValue(uf, out var estado))
             {
                 return $"{estado.NomeEstado},{estado.Regiao}";
-            } else
+            }
+            else
             {
                 return $"{uf},Desconhecido";
             }
