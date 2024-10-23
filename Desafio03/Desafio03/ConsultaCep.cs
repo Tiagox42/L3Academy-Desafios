@@ -191,40 +191,41 @@ namespace Plugin.ConsultaCep
         public string Regiao(string uf)
         {
             uf = uf.Trim().ToUpper();
-            var estados = new Dictionary<string, (string NomeEstado, string Regiao)>
+
+            var estados = new Dictionary<string, Tuple<string, string>>
             {
-            { "AC", ("Acre", "Norte") },
-            { "AL", ("Alagoas", "Nordeste") },
-            { "AP", ("Amapá", "Norte") },
-            { "AM", ("Amazonas", "Norte") },
-            { "BA", ("Bahia", "Nordeste") },
-            { "CE", ("Ceará", "Nordeste") },
-            { "DF", ("Distrito Federal", "Centro-Oeste") },
-            { "ES", ("Espírito Santo", "Sudeste") },
-            { "GO", ("Goiás", "Centro-Oeste") },
-            { "MA", ("Maranhão", "Nordeste") },
-            { "MT", ("Mato Grosso", "Centro-Oeste") },
-            { "MS", ("Mato Grosso do Sul", "Centro-Oeste") },
-            { "MG", ("Minas Gerais", "Sudeste") },
-            { "PA", ("Pará", "Norte") },
-            { "PB", ("Paraíba", "Nordeste") },
-            { "PR", ("Paraná", "Sul") },
-            { "PE", ("Pernambuco", "Nordeste") },
-            { "PI", ("Piauí", "Nordeste") },
-            { "RJ", ("Rio de Janeiro", "Sudeste") },
-            { "RN", ("Rio Grande do Norte", "Nordeste") },
-            { "RS", ("Rio Grande do Sul", "Sul") },
-            { "RO", ("Rondônia", "Norte") },
-            { "RR", ("Roraima", "Norte") },
-            { "SC", ("Santa Catarina", "Sul") },
-            { "SP", ("São Paulo", "Sudeste") },
-            { "SE", ("Sergipe", "Nordeste") },
-            { "TO", ("Tocantins", "Norte") },
+            { "AC", Tuple.Create("Acre", "Norte") },
+            { "AL", Tuple.Create("Alagoas", "Nordeste") },
+            { "AP", Tuple.Create("Amapá", "Norte") },
+            { "AM", Tuple.Create("Amazonas", "Norte") },
+            { "BA", Tuple.Create("Bahia", "Nordeste") },
+            { "CE", Tuple.Create("Ceará", "Nordeste") },
+            { "DF", Tuple.Create("Distrito Federal", "Centro-Oeste") },
+            { "ES", Tuple.Create("Espírito Santo", "Sudeste") },
+            { "GO", Tuple.Create("Goiás", "Centro-Oeste") },
+            { "MA", Tuple.Create("Maranhão", "Nordeste") },
+            { "MT", Tuple.Create("Mato Grosso", "Centro-Oeste") },
+            { "MS", Tuple.Create("Mato Grosso do Sul", "Centro-Oeste") },
+            { "MG", Tuple.Create("Minas Gerais", "Sudeste") },
+            { "PA", Tuple.Create("Pará", "Norte") },
+            { "PB", Tuple.Create("Paraíba", "Nordeste") },
+            { "PR", Tuple.Create("Paraná", "Sul") },
+            { "PE", Tuple.Create("Pernambuco", "Nordeste") },
+            { "PI", Tuple.Create("Piauí", "Nordeste") },
+            { "RJ", Tuple.Create("Rio de Janeiro", "Sudeste") },
+            { "RN", Tuple.Create("Rio Grande do Norte", "Nordeste") },
+            { "RS", Tuple.Create("Rio Grande do Sul", "Sul") },
+            { "RO", Tuple.Create("Rondônia", "Norte") },
+            { "RR", Tuple.Create("Roraima", "Norte") },
+            { "SC", Tuple.Create("Santa Catarina", "Sul") },
+            { "SP", Tuple.Create("São Paulo", "Sudeste") },
+            { "SE", Tuple.Create("Sergipe", "Nordeste") },
+            { "TO", Tuple.Create("Tocantins", "Norte") },
             };
 
             if (estados.TryGetValue(uf, out var estado))
             {
-                return $"{estado.NomeEstado},{estado.Regiao}";
+                return $"{estado.Item1},{estado.Item2}";
             }
             else
             {
