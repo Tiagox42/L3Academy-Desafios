@@ -27,7 +27,7 @@ namespace Plugin.ConsultaCep
 
             Entity entity = (Entity)context.InputParameters["Target"];
 
-            string cep = entity["new_cep"].ToString();
+            string cep = entity["address1_postalcode"].ToString();
             if (!ValidaCep(cep, out cep))
             {
                 return;
@@ -107,15 +107,21 @@ namespace Plugin.ConsultaCep
                     string resultado = await response.Content.ReadAsStringAsync();
 
                     Endereco_ViaCep objeto = JsonConvert.DeserializeObject<Endereco_ViaCep>(resultado);
-                    Endereco endereco = new Endereco();
-                    endereco.Cep = objeto.cep;
-                    endereco.Rua = objeto.logradouro;
-                    endereco.Bairro = objeto.bairro;
-                    endereco.Cidade = objeto.localidade;
-                    endereco.Estado = objeto.estado;
-                    endereco.Regiao = objeto.regiao;
 
-                    return endereco;
+                    if (objeto.erro == "true") {
+                        return null;
+                    } else
+                    {
+                        Endereco endereco = new Endereco();
+                        endereco.Cep = objeto.cep;
+                        endereco.Rua = objeto.logradouro;
+                        endereco.Bairro = objeto.bairro;
+                        endereco.Cidade = objeto.localidade;
+                        endereco.Estado = objeto.estado;
+                        endereco.Regiao = objeto.regiao;
+
+                        return endereco;
+                    }
                 }
             }
             catch (Exception)
@@ -260,6 +266,7 @@ namespace Plugin.ConsultaCep
         public string gia { get; set; }
         public string ddd { get; set; }
         public string siafi { get; set; }
+        public string erro { get; set; }
 
     }
     public class Endereco_OpenCep
