@@ -21,6 +21,11 @@ namespace Plugin.ConsultaCep
         {
             IPluginExecutionContext context = (IPluginExecutionContext)serviceProvider.GetService(typeof(IPluginExecutionContext));
 
+            if (context.Depth > 1)
+            {
+                return;
+            }
+
             IOrganizationServiceFactory serviceFactory = (IOrganizationServiceFactory)serviceProvider.GetService(typeof(IOrganizationServiceFactory));
             IOrganizationService service = serviceFactory.CreateOrganizationService(context.UserId);
             ITracingService tracingService = (ITracingService)serviceProvider.GetService(typeof(ITracingService));
@@ -50,6 +55,7 @@ namespace Plugin.ConsultaCep
                     entity["address1_city"] = endereco.Cidade;
                     entity["address1_stateorprovince"] = endereco.Estado;
                     entity["address1_country"] = endereco.Regiao;
+                    entity["new_retornoapi"] = "CEP atualizado pelo plugin em " + DateTime.Now.ToString("dd/MM/yyyy hh:mm tt");
 
                     service.Update(entity);
                 }
